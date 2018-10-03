@@ -3,17 +3,15 @@ package edu.khai.simonenko.collections;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.openjdk.jmh.annotations.*;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 @State(Scope.Benchmark)
-@Warmup(iterations = 5, time = 1)
-@Measurement(iterations = 15, time = 1)
+@Warmup(iterations = 5, time = 25, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 10, time = 25, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Fork(1)
 @CompilerControl(CompilerControl.Mode.DONT_INLINE)
 public class RemoveIfBenchmark {
 
@@ -36,8 +34,8 @@ public class RemoveIfBenchmark {
     }
 
     @Benchmark
-    public void testRemovingElementFromMiddleOfLinkedListWithRemove() {
-        linkedList.remove(STRING_TO_REMOVAL);
+    public void testRemovingElementFromMiddleOfLinkedListWithRemoveAll() {
+        linkedList.removeAll(Collections.singleton(STRING_TO_REMOVAL));
     }
 
     @Benchmark
@@ -46,8 +44,13 @@ public class RemoveIfBenchmark {
     }
 
     @Benchmark
-    public void testRemovingElementFromMiddleOfArrayListWithRemove() {
-        arrayList.remove(STRING_TO_REMOVAL);
+    public void testRemovingElementFromMiddleOfLinkedListWithIterator() {
+        removeIfBasedOnIterator(linkedList, s -> s.equals(STRING_TO_REMOVAL));
+    }
+
+    @Benchmark
+    public void testRemovingElementFromMiddleOfArrayListWithRemoveAll() {
+        arrayList.removeAll(Collections.singleton(STRING_TO_REMOVAL));
     }
 
     @Benchmark
@@ -55,11 +58,27 @@ public class RemoveIfBenchmark {
         arrayList.removeIf(s -> s.equals(STRING_TO_REMOVAL));
     }
 
+    @Benchmark
+    public void testRemovingElementFromMiddleOfArrayListWithIterator() {
+        removeIfBasedOnIterator(arrayList, s -> s.equals(STRING_TO_REMOVAL));
+    }
+
+    private static void removeIfBasedOnIterator(List<String> list, Predicate<String> predicate) {
+        Iterator<String> iterator = list.iterator();
+        while (iterator.hasNext()) {
+            if (predicate.test(iterator.next())){
+                iterator.remove();
+            }
+        }
+    }
+
     /*
-     * Benchmark                                                                Mode  Cnt   Score   Error  Units
-     * RemoveIfBenchmark.testRemovingElementFromMiddleOfArrayListWithRemove     avgt   15   2.723 ± 0.118  ms/op
-     * RemoveIfBenchmark.testRemovingElementFromMiddleOfArrayListWithRemoveIf   avgt   15  13.118 ± 0.456  ms/op
-     * RemoveIfBenchmark.testRemovingElementFromMiddleOfLinkedListWithRemove    avgt   15   3.089 ± 0.274  ms/op
-     * RemoveIfBenchmark.testRemovingElementFromMiddleOfLinkedListWithRemoveIf  avgt   15   7.484 ± 0.136  ms/op
+     * Benchmark                                                                 Mode  Cnt   Score   Error  Units
+     * RemoveIfBenchmark.testRemovingElementFromMiddleOfArrayListWithIterator    avgt   50   7.824 ± 0.653  ms/op
+     * RemoveIfBenchmark.testRemovingElementFromMiddleOfArrayListWithRemoveAll   avgt   50   8.638 ± 0.395  ms/op
+     * RemoveIfBenchmark.testRemovingElementFromMiddleOfArrayListWithRemoveIf    avgt   50  12.088 ± 0.462  ms/op
+     * RemoveIfBenchmark.testRemovingElementFromMiddleOfLinkedListWithIterator   avgt   50   9.447 ± 0.539  ms/op
+     * RemoveIfBenchmark.testRemovingElementFromMiddleOfLinkedListWithRemoveAll  avgt   50   9.054 ± 0.620  ms/op
+     * RemoveIfBenchmark.testRemovingElementFromMiddleOfLinkedListWithRemoveIf   avgt   50   9.416 ± 0.489  ms/op
      */
 }
